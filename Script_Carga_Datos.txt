@@ -1,0 +1,175 @@
+--- Tabla temporal de INTITUCIONES
+CREATE TEMP TABLE tmp_inst (
+	id_inst VARCHAR(5), 
+	nombre_inst VARCHAR(90), 
+	id_depa VARCHAR(60), 
+	nombre_depa VARCHAR(60), 
+	id_muni VARCHAR(5), 
+	nombre_muni VARCHAR(60), 
+	telefono VARCHAR (10) 
+);
+
+COPY tmp_inst FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\INSTITUCIONES.csv' DELIMITER ';' CSV HEADER ENCODING 'WIN1252';
+
+SELECT * FROM tmp_inst;
+
+
+--- Tabla temporal de PROGRAMAS
+CREATE TEMP TABLE tmp_prog (
+	id_inst VARCHAR(5),
+	id_depa VARCHAR(5),
+	nombre_depa VARCHAR(60),
+	id_muni VARCHAR(5),
+	id_sector VARCHAR(5),
+	sector VARCHAR(10),
+	id_tipo_inst VARCHAR(5),
+	tipo_inst VARCHAR(50),
+	cant_creditos VARCHAR(10),
+	id_area VARCHAR(5),
+	nombre_area VARCHAR(50),
+	id_metodologia VARCHAR(5),
+	metodologia VARCHAR(18),
+	id_nbc VARCHAR(5),
+	id_nivel_academico VARCHAR(5),
+	nivel_academico VARCHAR(20),
+	periodicidad VARCHAR(20),
+	cant_periodos VARCHAR(5) 
+);
+COPY tmp_prog FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\PROGRAMAS.csv' DELIMITER ';' CSV HEADER ENCODING 'WIN1252';
+
+SELECT * FROM tmp_prog;
+--DROP TABLE tmp_prog;
+
+--- Tabla temporal de MATRICULA
+CREATE TEMP TABLE tmp_mat (
+	id_inst VARCHAR(5),
+	id_sector VARCHAR(5),
+	id_tipo_inst VARCHAR(5),
+	id_depa VARCHAR(5),
+	id_muni VARCHAR(5),
+	id_prog VARCHAR(6),
+	nombre_prog VARCHAR(180),
+	id_nivel_academico VARCHAR(5),
+	id_metodologia VARCHAR(5),
+	id_area VARCHAR(5),
+	id_nbc VARCHAR(5),
+	nombre_nbc VARCHAR(60),
+	id_genero VARCHAR(5),
+	anio VARCHAR(5),
+	semestre VARCHAR(5),
+	cant_matriculados VARCHAR(5)
+);
+COPY tmp_mat FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\MATRICULA.csv' DELIMITER ';' CSV HEADER ENCODING 'latin-1';
+
+SELECT * FROM tmp_mat;
+
+--- Tabla temporal de NUEVO_PROGRAMA
+CREATE TEMP TABLE tmp_nueProg (
+	id_inst VARCHAR(5),
+	id_prog VARCHAR(6),
+	nombre_prog VARCHAR(180),
+	id_nbc VARCHAR(5),
+	nivel_academico VARCHAR(20),
+	metodologia VARCHAR(18),
+	cant_creditos VARCHAR(5),
+	cant_periodos VARCHAR(5),
+	periodicidad VARCHAR(20)
+);
+COPY tmp_nueProg FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\NUEVO_PROGRAMAS.csv' DELIMITER ';' CSV HEADER ENCODING 'UTF8';
+
+SELECT * FROM tmp_nueProg;
+
+--DROP TABLE tmp_mat;
+
+
+----- Llenar tabla departamento
+INSERT INTO departamento (id_depa,nombre_depa) 
+SELECT DISTINCT id_depa::INT, UPPER(nombre_depa)
+FROM tmp_prog
+GROUP BY id_depa,nombre_depa;
+
+SELECT * FROM departamento;
+
+----- Llenar tabla municipio
+INSERT INTO municipio (id_muni,id_depa,nombre_muni) 
+SELECT DISTINCT inst.id_muni::INT,prg.id_depa::INT, UPPER(inst.nombre_muni)
+FROM tmp_inst inst
+INNER JOIN tmp_prog prg
+ON inst.id_inst = prg.id_inst
+GROUP BY inst.id_muni,prg.id_depa, inst.nombre_muni;
+
+SELECT * FROM municipio;
+
+----- Llenar tabla institucion
+INSERT INTO institucion (id_inst, id_muni, nombre_inst, sector, tipo_inst) 
+SELECT DISTINCT inst.id_inst::INT, inst.id_muni::INT, UPPER(inst.nombre_inst), UPPER(prg.sector), UPPER(prg.tipo_inst)
+FROM tmp_inst inst
+INNER JOIN tmp_prog prg
+ON inst.id_inst = prg.id_inst
+GROUP BY inst.id_inst, inst.id_muni, inst.nombre_inst, prg.sector, prg.tipo_inst;
+
+SELECT * FROM institucion;
+
+----- Llenar tabla telefono
+INSERT INTO telefono (telefono, id_inst) 
+SELECT DISTINCT inst.telefono, ist.id_inst::INT
+FROM tmp_inst inst
+INNER JOIN institucion ist
+ON inst.id_inst::INT = ist.id_inst
+GROUP BY inst.telefono, ist.id_inst;
+
+SELECT * FROM telefono;
+
+----- Llenar tabla area_conocimiento
+INSERT INTO area_conocimiento (id_area,nombre_area) 
+SELECT DISTINCT id_area::INT, UPPER(nombre_area)
+FROM tmp_prog
+GROUP BY id_area,nombre_area;
+
+SELECT * FROM area_conocimiento;
+
+----- Llenar tabla poseer
+INSERT INTO poseer (id_inst, id_area) 
+SELECT DISTINCT ist.id_inst::INT, prg.id_area::INT
+FROM institucion ist
+INNER JOIN tmp_prog prg
+ON ist.id_inst::INT = prg.id_inst::INT
+GROUP BY ist.id_inst, prg.id_area;
+
+SELECT * FROM poseer;
+
+----- Llenar tabla nucleo_conocimiento
+INSERT INTO nucleo_conocimiento (id_nbc, id_area, nombre_nbc) 
+SELECT DISTINCT mat.id_nbc::INT, arc.id_area::INT, UPPER(mat.nombre_nbc)
+FROM tmp_mat mat
+INNER JOIN area_conocimiento arc
+ON mat.id_area::INT = arc.id_area
+GROUP BY mat.id_nbc, arc.id_area, mat.nombre_nbc;
+
+SELECT * FROM nucleo_conocimiento;
+
+----- Llenar tabla programa_academico
+INSERT INTO programa_academico (id_prog, id_nbc, nombre_prog, nivel_academico, cant_creditos, metodologia, periodicidad, cant_periodos) 
+SELECT DISTINCT nprg.id_prog::INT, nprg.id_nbc::INT, UPPER(nprg.nombre_prog), UPPER(nprg.nivel_academico), nprg.cant_creditos::INT, UPPER(nprg.metodologia), UPPER(nprg.periodicidad), nprg.cant_periodos::INT
+FROM tmp_nueProg nprg
+INNER JOIN nucleo_conocimiento nbc
+ON nprg.id_nbc::INT  = nbc.id_nbc
+WHERE nprg.id_prog::INT IN (SELECT MIN(id_prog::INT) FROM tmp_nueProg 
+            GROUP BY nombre_prog)
+GROUP BY nprg.id_prog, nprg.id_nbc, nprg.nombre_prog, nprg.nivel_academico, nprg.cant_creditos, nprg.metodologia,nprg.periodicidad, nprg.cant_periodos;
+
+SELECT * FROM programa_academico; 
+
+----- Llenar tabla matricula
+INSERT INTO matricula (id_inst, semestre, id_prog, anio, cant_matriculados) 
+SELECT DISTINCT inst.id_inst, mat.semestre::INT, prga.id_prog, mat.anio::INT, SUM(mat.cant_matriculados::INT) 
+FROM institucion inst
+INNER JOIN tmp_mat mat
+ON inst.id_inst = mat.id_inst::INT
+INNER JOIN programa_academico prga
+ON mat.nombre_prog = prga.nombre_prog 
+GROUP BY inst.id_inst, mat.semestre, prga.id_prog, mat.anio;
+
+SELECT * FROM matricula 
+
+
