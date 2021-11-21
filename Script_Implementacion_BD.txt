@@ -1,0 +1,83 @@
+CREATE TABLE departamento
+(
+	id_depa INT NOT NULL,
+	nombre_depa VARCHAR(60), 
+	PRIMARY KEY (id_depa)
+); 
+
+CREATE TABLE municipio
+(
+	id_muni INT NOT NULL,
+	id_depa INT NOT NULL,
+	nombre_muni VARCHAR(40), 
+	PRIMARY KEY (id_muni),
+	FOREIGN KEY (id_depa) REFERENCES departamento(id_depa)
+); 
+
+CREATE TABLE institucion
+(
+	id_inst INT NOT NULL,
+	id_muni INT NOT NULL,
+	nombre_inst VARCHAR(100), 
+	sector VARCHAR(10),
+	tipo_inst VARCHAR(50),
+	PRIMARY KEY (id_inst),
+	FOREIGN KEY (id_muni) REFERENCES municipio(id_muni)
+); 
+
+CREATE TABLE telefono
+(
+	telefono VARCHAR(10),
+	id_inst INT NOT NULL,
+	PRIMARY KEY (telefono, id_inst),
+	FOREIGN KEY (id_inst) REFERENCES institucion(id_inst)
+); 
+
+CREATE TABLE area_conocimiento
+(
+	id_area INT NOT NULL,
+	nombre_area VARCHAR(50), 
+	PRIMARY KEY (id_area)
+); 
+
+CREATE TABLE poseer
+(
+	id_inst INT NOT NULL,
+	id_area INT NOT NULL,
+	PRIMARY KEY (id_inst, id_area),
+	FOREIGN KEY (id_inst) REFERENCES institucion(id_inst),
+	FOREIGN KEY (id_area) REFERENCES area_conocimiento(id_area)
+);
+
+CREATE TABLE nucleo_conocimiento
+(
+	id_nbc INT NOT NULL,
+	id_area INT NOT NULL,
+	nombre_nbc VARCHAR(60), 
+	PRIMARY KEY (id_nbc),
+	FOREIGN KEY (id_area) REFERENCES area_conocimiento(id_area)
+); 
+
+CREATE TABLE programa_academico (
+	id_prog INT NOT NULL,
+	id_nbc INT NOT NULL,
+	nombre_prog VARCHAR(180),
+	nivel_academico VARCHAR(18),
+	cant_creditos INT,
+	metodologia VARCHAR(18),
+	periodicidad VARCHAR(18),
+	cant_periodos INT,
+	PRIMARY KEY (id_prog),
+	FOREIGN KEY (id_nbc) REFERENCES nucleo_conocimiento(id_nbc)
+);
+
+CREATE TABLE matricula (
+	id_inst INT NOT NULL,
+	semestre INT NOT NULL,
+	id_prog INT NOT NULL,
+	anio INT NOT NULL,
+	cant_matriculados INT,
+	PRIMARY KEY (id_inst, semestre, id_prog, anio),
+	FOREIGN KEY (id_prog) REFERENCES programa_academico(id_prog),
+	FOREIGN KEY (id_inst) REFERENCES institucion(id_inst)
+);
