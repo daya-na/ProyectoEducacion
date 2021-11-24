@@ -1,0 +1,62 @@
+--- ESCENARIOS DE ANALISIS
+
+--- Ejercicio 01
+--- Ranking de programas académicos por cantidad de matriculados
+--- El objetivo de esta métrica es obtener los programas académicos con mayor cantidad de estudiantes matriculados.
+SELECT prg.nombre_prog, SUM(mat.cant_matriculados) AS cant_matriculados
+FROM programa_academico prg
+INNER JOIN matricula mat
+ON prg.id_prog = mat.id_prog
+GROUP BY prg.nombre_prog
+ORDER BY SUM(mat.cant_matriculados) DESC;
+
+--- Ejercicio 02
+--- Proporción de instituciones por ubicación
+--- El objetivo de esta métrica es visualizar la cantidad de instituciones que existen a nivel de departamento 
+--- y municipio.
+SELECT dep.nombre_depa, mun.nombre_muni, COUNT(inst.nombre_inst)
+FROM institucion inst
+INNER JOIN municipio mun
+ON inst.id_muni = mun.id_muni
+INNER JOIN departamento dep 
+ON mun.id_depa = dep.id_depa
+GROUP BY dep.nombre_depa, mun.nombre_muni
+ORDER BY dep.nombre_depa, mun.nombre_muni DESC;
+
+--- Ejercicio 03
+--- Cantidad de programas académicos brindados por institución
+--- El objetivo de esta métrica es mostrar el número de programas académicos que brinda cada institución 
+--- y cuales son las que ofrecen mayor cantidad.
+SELECT inst.id_inst, inst.nombre_inst, COUNT(prg.id_prog) as cantProgramas
+FROM institucion inst
+INNER JOIN matricula mat 
+ON inst.id_inst = mat.id_inst
+INNER JOIN programa_academico prg
+ON mat.id_prog = prg.id_prog
+GROUP BY inst.id_inst, inst.nombre_inst
+ORDER BY COUNT(prg.id_prog) DESC;
+
+--- Ejercicio 04
+--- Proporción de alumnos matriculados según período de matrícula
+--- El objetivo de esta métrica es obtener la cantidad de alumnos matriculados en un programa académico 
+--- a nivel de año y semestre académico.
+SELECT mat.anio, mat.semestre, COUNT(mat.cant_matriculados)
+FROM matricula mat
+INNER JOIN programa_academico prg 
+ON mat.id_prog = prg.id_prog
+GROUP BY mat.anio, mat.semestre
+ORDER BY mat.anio, mat.semestre;
+
+--- Ejercicio 05
+--- Programas académicos con mayor presencia en instituciones
+--- El objetivo de esta métrica es determinar cuales son los programas académicos con mayor frecuencia 
+--- en las diferentes instituciones de educación superior seleccionadas.
+SELECT prg.nombre_prog, COUNT(inst.id_inst)
+FROM institucion inst 
+INNER JOIN matricula mat 
+ON inst.id_inst = mat.id_inst 
+INNER JOIN programa_academico prg 
+ON mat.id_prog = prg.id_prog 
+GROUP BY prg.nombre_prog
+ORDER BY COUNT(inst.id_inst) DESC;
+
