@@ -40,15 +40,6 @@ CREATE TABLE area_conocimiento
 	PRIMARY KEY (id_area)
 ); 
 
-CREATE TABLE poseer
-(
-	id_inst INT NOT NULL,
-	id_area INT NOT NULL,
-	PRIMARY KEY (id_inst, id_area),
-	FOREIGN KEY (id_inst) REFERENCES institucion(id_inst),
-	FOREIGN KEY (id_area) REFERENCES area_conocimiento(id_area)
-);
-
 CREATE TABLE nucleo_conocimiento
 (
 	id_nbc INT NOT NULL,
@@ -73,11 +64,11 @@ CREATE TABLE programa_academico (
 
 CREATE TABLE matricula (
 	id_inst INT NOT NULL,
-	semestre INT NOT NULL,
 	id_prog INT NOT NULL,
 	anio INT NOT NULL,
+	semestre INT NOT NULL,
 	cant_matriculados INT,
-	PRIMARY KEY (id_inst, semestre, id_prog, anio),
+	PRIMARY KEY (id_inst, id_prog, anio, semestre),
 	FOREIGN KEY (id_prog) REFERENCES programa_academico(id_prog),
 	FOREIGN KEY (id_inst) REFERENCES institucion(id_inst)
 );
