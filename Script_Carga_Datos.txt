@@ -59,7 +59,7 @@ CREATE TEMP TABLE tmp_mat (
 	semestre VARCHAR(5),
 	cant_matriculados VARCHAR(5)
 );
-COPY tmp_mat FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\MATRICULA.csv' DELIMITER ';' CSV HEADER ENCODING 'latin-1';
+COPY tmp_mat FROM 'C:\PROYECTO_EDUCACION\DATA_ORIGEN\MATRICULA_NUEVO.csv' DELIMITER ';' CSV HEADER ENCODING 'latin-1';
 
 SELECT * FROM tmp_mat;
 
@@ -128,16 +128,6 @@ GROUP BY id_area,nombre_area;
 
 SELECT * FROM area_conocimiento;
 
------ Llenar tabla poseer
-INSERT INTO poseer (id_inst, id_area) 
-SELECT DISTINCT ist.id_inst::INT, prg.id_area::INT
-FROM institucion ist
-INNER JOIN tmp_prog prg
-ON ist.id_inst::INT = prg.id_inst::INT
-GROUP BY ist.id_inst, prg.id_area;
-
-SELECT * FROM poseer;
-
 ----- Llenar tabla nucleo_conocimiento
 INSERT INTO nucleo_conocimiento (id_nbc, id_area, nombre_nbc) 
 SELECT DISTINCT mat.id_nbc::INT, arc.id_area::INT, UPPER(mat.nombre_nbc)
@@ -171,5 +161,3 @@ ON mat.nombre_prog = prga.nombre_prog
 GROUP BY inst.id_inst, mat.semestre, prga.id_prog, mat.anio;
 
 SELECT * FROM matricula 
-
-
