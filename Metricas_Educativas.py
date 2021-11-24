@@ -6,10 +6,6 @@ import pandas as pd
 from Conexion_Consulta import Connection
 import Consultas_Educativas as sql
 import plotly.graph_objects as go
-from urllib.request import urlopen
-import json
-with urlopen('https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json') as response:
-    counties = json.load(response)
 
 external_stylesheets = ["https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.1.3/flatly/bootstrap.min.css"]
 
